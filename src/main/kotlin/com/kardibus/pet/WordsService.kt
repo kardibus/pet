@@ -24,6 +24,7 @@ class WordsService(private var wordsRepository: WordsRepository) {
                     }
                 }
             }
+
             if (!msg.newChatMembers.isNullOrEmpty()) {
                 bot.sendMessage(
                     msg.chat.id.toChatId(),
