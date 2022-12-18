@@ -27,7 +27,6 @@ class WordsService(private var wordsRepository: WordsRepository) {
                             text = "у нас нельзя матерится в чате  \uD83D\uDE19"
                         )
                         isWord = false
-                        return@onMessage
                     }
                 }
             }
