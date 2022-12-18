@@ -9,7 +9,6 @@ class Words {
     val id:Int = 0
     val word:String = ""
 
-
     override fun toString(): String {
         return "Words(id=$id, word='$word')"
     }

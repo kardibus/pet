@@ -6,13 +6,15 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class WordsService(private var wordsRepository: WordsRepository) {
+class WordsService(private var wordsRepository: WordsRepository, private val bot: Bot) {
 
     private var isWord: Boolean = true
 
     init {
-        val token = "5903504093:AAGEWOrT2M-E6KLkjKAIchwMu8hwNx9s-Yk"
-        val bot = Bot.createPolling(token)
+        start()
+    }
+
+    fun start() {
         bot.onMessage { msg ->
             isWord = true
             if (msg.text != null) {
