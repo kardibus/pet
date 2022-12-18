@@ -8,18 +8,25 @@ import org.springframework.stereotype.Service
 @Service
 class WordsService(private var wordsRepository: WordsRepository) {
 
+    private var isWord: Boolean = true
+
     init {
         val token = "5903504093:AAGEWOrT2M-E6KLkjKAIchwMu8hwNx9s-Yk"
         val bot = Bot.createPolling(token)
         bot.onMessage { msg ->
-
+            isWord = true
             if (msg.text != null) {
                 val words: List<String> = msg.text?.split(" ")!!.toList()
 
                 for (word in words) {
-                    if (wordsRepository.findByWordOutInt(word.lowercase()) > 0) {
+                    if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord) {
 
-                        bot.sendMessage(msg.chat.id.toChatId(), replyToMessageId = msg.messageId, text = "у нас нельзя матерится в чате  \uD83D\uDE19")
+                        bot.sendMessage(
+                            msg.chat.id.toChatId(),
+                            replyToMessageId = msg.messageId,
+                            text = "у нас нельзя матерится в чате  \uD83D\uDE19"
+                        )
+                        isWord = false
                         return@onMessage
                     }
                 }
