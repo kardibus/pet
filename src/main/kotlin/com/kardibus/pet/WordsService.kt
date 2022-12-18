@@ -12,7 +12,7 @@ class WordsService(private var wordsRepository: WordsRepository) {
         val token = "5903504093:AAGEWOrT2M-E6KLkjKAIchwMu8hwNx9s-Yk"
         val bot = Bot.createPolling(token)
         bot.onMessage { msg ->
-            val words: List<String> = msg.text!!.split("\\W+").toList()
+            val words: List<String> = msg.text!!.split(" ").toList()
 
             for (word in words) {
                 if (wordsRepository.findByWordOutInt(word) > 0) {
