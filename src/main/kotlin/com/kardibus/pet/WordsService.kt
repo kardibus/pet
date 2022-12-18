@@ -12,16 +12,18 @@ class WordsService(private var wordsRepository: WordsRepository) {
         val token = "5903504093:AAGEWOrT2M-E6KLkjKAIchwMu8hwNx9s-Yk"
         val bot = Bot.createPolling(token)
         bot.onMessage { msg ->
-            val words: List<String> = msg.text!!.split(" ").toList()
 
-            for (word in words) {
-                if (wordsRepository.findByWordOutInt(word) > 0) {
+            if (msg.text != null) {
+                val words: List<String> = msg.text?.split(" ")!!.toList()
 
-                    bot.sendMessage(msg.chat.id.toChatId(), text = "у нас нельзя матерится в чате")
-                    return@onMessage
+                for (word in words) {
+                    if (wordsRepository.findByWordOutInt(word.lowercase()) > 0) {
+
+                        bot.sendMessage(msg.chat.id.toChatId(), replyToMessageId = msg.messageId, text = "у нас нельзя матерится в чате  \uD83D\uDE19")
+                        return@onMessage
+                    }
                 }
             }
-
             if (!msg.newChatMembers.isNullOrEmpty()) {
                 bot.sendMessage(
                     msg.chat.id.toChatId(),
