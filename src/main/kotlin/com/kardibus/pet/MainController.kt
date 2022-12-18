@@ -7,5 +7,7 @@ import org.springframework.web.bind.annotation.RestController
 class MainController {
 
     @GetMapping("/")
-    fun main():String = "Bot"
+    fun main():String{
+        return "bot"
+    }
 }
