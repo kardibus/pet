@@ -2,11 +2,14 @@ package com.kardibus.pet
 
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 
 @Service
 class WordsService(private var wordsRepository: WordsRepository, private val bot: Bot) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private var isWord: Boolean = true
 
@@ -18,10 +21,13 @@ class WordsService(private var wordsRepository: WordsRepository, private val bot
         bot.onMessage { msg ->
             isWord = true
             if (msg.text != null) {
-                val words: List<String> = msg.text?.split(" ")!!.toList()
+                val words: List<String> = msg.text?.split(" ", ".", ",", "?", "!")!!.toList()
 
                 for (word in words) {
-                    if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord) {
+                    if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord && word.isNotEmpty()) {
+
+                        logger.info("$msg")
+                        logger.info("${msg.from!!.first_name} ${msg.from!!.lastName}")
 
                         bot.sendMessage(
                             msg.chat.id.toChatId(),
