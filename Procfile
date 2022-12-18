@@ -1,1 +1,1 @@
-web: java $JAVA_OPT -Dserver.port=$PORT -jar target/*.jar
+web: bundle exec thin start -p $PORT
