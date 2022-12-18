@@ -4,6 +4,7 @@ import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
 import org.springframework.stereotype.Service
 
+
 @Service
 class WordsService(private var wordsRepository: WordsRepository) {
 
@@ -11,10 +12,14 @@ class WordsService(private var wordsRepository: WordsRepository) {
         val token = "5903504093:AAGEWOrT2M-E6KLkjKAIchwMu8hwNx9s-Yk"
         val bot = Bot.createPolling(token)
         bot.onMessage { msg ->
-            if (wordsRepository.findByWordOutInt(msg.text.toString()) > 0) {
+            val words: List<String> = msg.text!!.split("\\W+").toList()
 
-                bot.sendMessage(msg.chat.id.toChatId(), text = "у нас нельзя матерится в чате")
-                return@onMessage
+            for (word in words) {
+                if (wordsRepository.findByWordOutInt(word) > 0) {
+
+                    bot.sendMessage(msg.chat.id.toChatId(), text = "у нас нельзя матерится в чате")
+                    return@onMessage
+                }
             }
 
             if (!msg.newChatMembers.isNullOrEmpty()) {
