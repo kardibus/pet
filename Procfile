@@ -1,1 +1,1 @@
-web: java -Dserver.port=${PORT:33500} -jar target/pet-0.0.1-SNAPSHOT.jar
+web: java $JAVA_OPT -Dserver.port=${PORT:33500} -jar target/pet-0.0.1-SNAPSHOT.jar
