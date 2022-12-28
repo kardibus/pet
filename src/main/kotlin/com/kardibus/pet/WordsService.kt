@@ -18,7 +18,7 @@ class WordsService(private var wordsRepository: WordsRepository, private val bot
 
     private var map = mapOf(0 to "мразь",1 to "хуесос", 2 to "уебок", 3 to "пидор")
 
-    private var random = Random(3).nextInt()
+    private var random = (0..3).random()
 
     init {
         GlobalScope.launch { start() }
