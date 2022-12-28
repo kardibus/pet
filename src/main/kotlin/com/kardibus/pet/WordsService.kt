@@ -2,6 +2,8 @@ package com.kardibus.pet
 
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -14,7 +16,7 @@ class WordsService(private var wordsRepository: WordsRepository, private val bot
     private var isWord: Boolean = true
 
     init {
-        start()
+        GlobalScope.launch { start() }
     }
 
     fun start() {
