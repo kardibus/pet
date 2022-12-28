@@ -18,8 +18,6 @@ class WordsService(private var wordsRepository: WordsRepository, private val bot
 
     private var map = mapOf(0 to "мразь",1 to "хуесос", 2 to "уебок", 3 to "пидор")
 
-    private var random = (0..3).random()
-
     init {
         GlobalScope.launch { start() }
     }
@@ -35,7 +33,7 @@ class WordsService(private var wordsRepository: WordsRepository, private val bot
 
                         logger.info("$msg")
                         logger.info("${msg.from!!.first_name} ${msg.from!!.lastName}")
-
+                        var random = (0..3).random()
                         bot.sendMessage(
                             msg.chat.id.toChatId(),
                             replyToMessageId = msg.messageId,
