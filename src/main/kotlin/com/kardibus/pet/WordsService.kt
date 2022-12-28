@@ -6,6 +6,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import kotlin.random.Random
 
 
 @Service
@@ -14,6 +15,10 @@ class WordsService(private var wordsRepository: WordsRepository, private val bot
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private var isWord: Boolean = true
+
+    private var map = mapOf(1 to "хуесос", 2 to "уебок", 3 to "пидор")
+
+    private var random = (1..3).random()
 
     init {
         GlobalScope.launch { start() }
@@ -34,7 +39,7 @@ class WordsService(private var wordsRepository: WordsRepository, private val bot
                         bot.sendMessage(
                             msg.chat.id.toChatId(),
                             replyToMessageId = msg.messageId,
-                            text = "у нас нельзя матерится в чате  \uD83D\uDE19"
+                            text = "у нас нельзя матерится в чате ${map.get(random)}  \uD83D\uDE19"
                         )
                         isWord = false
                     }
