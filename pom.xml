@@ -54,7 +54,7 @@
         <dependency>
             <groupId>com.github.elbekD</groupId>
             <artifactId>kt-telegram-bot</artifactId>
-            <version>2.1.8</version>
+            <version>2.2.0</version>
         </dependency>
 
         <dependency>
@@ -105,6 +105,11 @@
             <version>2.10.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.6.0</version>
+        </dependency>
     </dependencies>
 
     <build>

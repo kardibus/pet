@@ -1,4 +1,4 @@
-package com.kardibus.pet
+package com.kardibus.pet.model
 
 data class ModelResponse(
     val result: Result

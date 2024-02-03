@@ -1,4 +1,4 @@
-package com.kardibus.pet
+package com.kardibus.pet.config
 
 import com.elbekd.bot.Bot
 import io.netty.channel.ChannelOption

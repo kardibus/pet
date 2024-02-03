@@ -2,16 +2,13 @@ package com.kardibus.pet
 
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.gson.Gson
+import com.elbekd.bot.types.UpdateMessage
+import com.kardibus.pet.model.Words
+import com.kardibus.pet.util.Message
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.BodyInserters
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClientResponseException
 
 val Log = LoggerFactory.getLogger(WordsService::class.java)
 
@@ -19,8 +16,7 @@ val Log = LoggerFactory.getLogger(WordsService::class.java)
 class WordsService(
     private var wordsRepository: WordsRepository,
     private val bot: Bot,
-    private val webClient: WebClient,
-    @Value("\${iam.token}") val iamToken: String
+    private var messages: Message
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -34,82 +30,57 @@ class WordsService(
     }
 
     fun start() {
+        bot.onAnyUpdate { upd ->
+            Log.info(upd.toString())
+
+            if (!(upd as UpdateMessage).message.forwardFromChat?.title.isNullOrBlank()) {
+                if ((upd as UpdateMessage).message.forwardFromChat!!.title == "Двач" || (upd as UpdateMessage).message.forwardFromChat!!.title == "Ньюсач/Двач" ) {
+                    var m = upd.message
+                    bot.deleteMessage(m.chat.id.toChatId(), m.messageId)
+                }
+            }
+        }
         bot.onMessage { msg ->
             isWord = true
             if (msg.text != null) {
-                //     val words: List<String> = msg.text?.split(" ", ".", ",", "?", "!")!!.toList()
+                val words: List<String> = msg.text?.split(" ", ".", ",", "?", "!")!!.toList()
 
-                // Create completion options
-                var completionOptions = CompletionOptions(stream = false, temperature = 0.0, maxTokens = "1000")
+                Log.info(msg.toString())
 
+                //     var message = messages.sendMessage(msg.text!!)
 
-                val systemMessage = Message(
-                    role = "system",
-                    text = "Если есть в тексте ругательные слова или текст имеет оскорбляющий смысл верни только true, иначе возвращай только false"
-                )
-                val userMessage = Message(role = "user", text = "${msg.text}")
-
-                // Create model request
-                val modelRequest = ModelRequest(
-                    modelUri = "gpt://b1g28ivuvukiq10nl0ip/yandexgpt-lite",
-                    completionOptions = completionOptions,
-                    messages = listOf(systemMessage, userMessage)
-                )
-
-                val objectMapper = ObjectMapper()
-                val json = objectMapper.writeValueAsString(modelRequest)
-
-                Log.info(json)
-
-                val response =
-                    webClient.post().uri("https://llm.api.cloud.yandex.net/foundationModels/v1/completion")
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", "Bearer $iamToken")
-                        .header("x-folder-id", "b1g28ivuvukiq10nl0ip")
-                        .body(BodyInserters.fromValue(json))
-                        .retrieve()
-                        .bodyToMono(String::class.java)
-                        .doOnError { throwable ->
-                            if (throwable is WebClientResponseException) {
-                                // Обработка ошибок HTTP
-                                val statusCode = throwable.statusCode
-                                val responseBody = throwable.responseBodyAsString
-                                Log.error("HTTP Error: $statusCode, Response: $responseBody")
-                            } else {
-                                // Обработка других исключений
-                                Log.error("Error: ${throwable.message}")
-                            }
-                        }
-                        .block()
-
-                val gson = Gson().fromJson(response, ModelResponse::class.java)
-
-                Log.info(gson.toString())
-
-                if (gson!!.result.alternatives.first().message.text.lowercase() == "true") {
-                    var random = (0..3).random()
-                    bot.sendMessage(
-                        msg.chat.id.toChatId(),
-                        replyToMessageId = msg.messageId,
-                        text = "у нас нельзя оскорблять или матерится в чате ${map.get(random)}  \uD83D\uDE19"
-                    )
-                }
-
-//                for (word in words) {
-//                    if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord && word.isNotEmpty()) {
+//                Log.info(message.toString())
 //
-//                        logger.info("$msg")
-//                        logger.info("${msg.from!!.first_name} ${msg.from!!.lastName}")
-//                        var random = (0..3).random()
-//                        bot.sendMessage(
-//                            msg.chat.id.toChatId(),
-//                            replyToMessageId = msg.messageId,
-//                            text = "у нас нельзя матерится в чате ${map.get(random)}  \uD83D\uDE19"
-//                        )
-//                        isWord = false
-//                    }
+//                if (message!!.result.alternatives.first().message.text.lowercase() == "true") {
+//                    var random = (0..3).random()
+//                    bot.sendMessage(
+//                        msg.chat.id.toChatId(),
+//                        replyToMessageId = msg.messageId,
+//                        text = "у нас нельзя оскорблять или матерится в чате ${map.get(random)}  \uD83D\uDE19"
+//                    )
 //                }
+
+                for (w in words) {
+                    //     if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord && word.isNotEmpty()) {
+                    if (wordsRepository.findByWordSimilarity(w.lowercase()).stream().count() > 0) {
+                        logger.info("$msg")
+                        logger.info("${msg.from!!.first_name} ${msg.from!!.lastName}")
+                        var random = (0..3).random()
+                        bot.sendMessage(
+                            msg.chat.id.toChatId(),
+                            replyToMessageId = msg.messageId,
+                            text = "у нас нельзя матерится в чате ${map[random]}  \uD83D\uDE19"
+                        )
+                        if (wordsRepository.findByWordOutInt(w.lowercase()) < 1) {
+                          GlobalScope.launch {wordsRepository.save(Words().apply { word = w.lowercase() })}
+                        }
+                        isWord = false
+                    }
+                }
             }
+
+            messages.addMessage(msg.text.toString())
+            messages.startSendingMessages()
 
             if (!msg.newChatMembers.isNullOrEmpty()) {
                 bot.sendMessage(
