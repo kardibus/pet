@@ -11,8 +11,8 @@ import jakarta.persistence.Table
 open class Words {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id:Int = 0
-    var word:String = ""
+    open var id:Int = 0
+    open var word:String = ""
 
     override fun toString(): String {
         return "Words(id=$id, word='$word')"

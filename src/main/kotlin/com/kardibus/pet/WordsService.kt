@@ -34,7 +34,7 @@ class WordsService(
             Log.info(upd.toString())
 
             if (!(upd as UpdateMessage).message.forwardFromChat?.title.isNullOrBlank()) {
-                if ((upd as UpdateMessage).message.forwardFromChat!!.title == "Двач" || (upd as UpdateMessage).message.forwardFromChat!!.title == "Ньюсач/Двач" ) {
+                if (upd.message.forwardFromChat!!.title == "Двач" || upd.message.forwardFromChat!!.title == "Ньюсач/Двач" ) {
                     var m = upd.message
                     bot.deleteMessage(m.chat.id.toChatId(), m.messageId)
                 }
@@ -72,7 +72,7 @@ class WordsService(
                             text = "у нас нельзя матерится в чате ${map[random]}  \uD83D\uDE19"
                         )
                         if (wordsRepository.findByWordOutInt(w.lowercase()) < 1) {
-                          GlobalScope.launch {wordsRepository.save(Words().apply { word = w.lowercase() })}
+                          wordsRepository.save(Words().apply { word = w.lowercase() })
                         }
                         isWord = false
                     }

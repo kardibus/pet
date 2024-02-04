@@ -1,7 +1,5 @@
 package com.kardibus.pet.util
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -16,16 +14,16 @@ class Message(
 
     private var cashe = StringBuilder()
 
-    fun addMessage(string: String){
+    fun addMessage(string: String) {
         cashe.append(string)
         cashe.append(" ")
     }
 
-    fun startSendingMessages(){
-        GlobalScope.launch { sendMessage() }
+    fun startSendingMessages() {
+        sendMessage()
     }
 
-    private fun sendMessage(){
+    private fun sendMessage() {
 //        var completionOptions = CompletionOptions(stream = false, temperature = 0.0, maxTokens = "1000")
 //
 //
