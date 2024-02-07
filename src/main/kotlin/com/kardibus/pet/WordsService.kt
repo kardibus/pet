@@ -3,6 +3,8 @@ package com.kardibus.pet
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
 import com.elbekd.bot.types.UpdateMessage
+import com.github.demidko.aot.MorphologyTag
+import com.github.demidko.aot.PartOfSpeech.partOfSpeech
 import com.github.demidko.aot.WordformMeaning.lookupForMeanings
 import com.kardibus.pet.model.Words
 import com.kardibus.pet.util.Message
@@ -52,11 +54,12 @@ class WordsService(
 //                }
 
                 for (w in words) {
-                    val lookupForMeanings = lookupForMeanings(w);
+                    val lookupForMeanings = lookupForMeanings(w.lowercase());
+
                     logger.info("размер массива ${lookupForMeanings.size}")
                     if (lookupForMeanings.size >0) {
                         logger.info("лемма ${lookupForMeanings[0].lemma}")
-                        logger.info("морфалогия ${lookupForMeanings[0].morphology}")
+                        logger.info("морфалогия ${lookupForMeanings[0].morphology} ${partOfSpeech(lookupForMeanings[0].morphology[0])}")
                         logger.info("трансформация ${lookupForMeanings[0].transformations}")
                     }
                     //     if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord && word.isNotEmpty()) {
