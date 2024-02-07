@@ -3,6 +3,7 @@ package com.kardibus.pet
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
 import com.elbekd.bot.types.UpdateMessage
+import com.github.demidko.aot.WordformMeaning.lookupForMeanings
 import com.kardibus.pet.model.Words
 import com.kardibus.pet.util.Message
 import kotlinx.coroutines.GlobalScope
@@ -30,16 +31,6 @@ class WordsService(
     }
 
     fun start() {
-        bot.onAnyUpdate { upd ->
-            Log.info(upd.toString())
-
-            if (!(upd as UpdateMessage).message.forwardFromChat?.title.isNullOrBlank()) {
-                if (upd.message.forwardFromChat!!.title == "Двач" || upd.message.forwardFromChat!!.title == "Ньюсач/Двач" ) {
-                    var m = upd.message
-                    bot.deleteMessage(m.chat.id.toChatId(), m.messageId)
-                }
-            }
-        }
         bot.onMessage { msg ->
             isWord = true
             if (msg.text != null) {
@@ -61,6 +52,13 @@ class WordsService(
 //                }
 
                 for (w in words) {
+                    val lookupForMeanings = lookupForMeanings(w);
+                    logger.info("размер массива ${lookupForMeanings.size}")
+                    if (lookupForMeanings.size >0) {
+                        logger.info("лемма ${lookupForMeanings[0].lemma}")
+                        logger.info("морфалогия ${lookupForMeanings[0].morphology}")
+                        logger.info("трансформация ${lookupForMeanings[0].transformations}")
+                    }
                     //     if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord && word.isNotEmpty()) {
                     if (wordsRepository.findByWordSimilarity(w.lowercase()).stream().count() > 0) {
                         logger.info("$msg")
@@ -94,6 +92,12 @@ class WordsService(
                     msg.chat.id.toChatId(),
                     "Прощай ${msg.leftChatMember?.first_name} ${msg.leftChatMember?.lastName}"
                 )
+            }
+
+            if (!msg.forwardFromChat?.title.isNullOrBlank()) {
+                if (msg.forwardFromChat!!.title == "Двач" || msg.forwardFromChat!!.title == "Ньюсач/Двач" ) {
+                    bot.deleteMessage(msg.chat.id.toChatId(), msg.messageId)
+                }
             }
         }
 

@@ -30,6 +30,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.github.demidko</groupId>
+            <artifactId>aot</artifactId>
+            <version>2022.11.28</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>

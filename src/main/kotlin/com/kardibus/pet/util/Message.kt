@@ -29,7 +29,7 @@ class Message(
 //
 //        val systemMessage = Message(
 //            role = "system",
-//            text = "Верни true если в тексте есть сука"
+//            text = "верни true если в тексте есть матершинные слова или текст кого то оскорбляет иначе верни false"
 //        )
 //        val userMessage = Message(role = "user", text = "${msg}")
 //
