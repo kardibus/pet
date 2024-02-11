@@ -1,10 +1,5 @@
 pipeline {
     agent any
-    environment {
-        MAVEN_ARGS = "clean install"
-        dockerContainerName = 'pet'
-        dockerImageName = 'pet-api'
-    }
     stages {
         stage('Build') {
             steps {
@@ -15,9 +10,9 @@ pipeline {
         }
         stage('Clean container') {
             steps {
-                bat "docker ps -f name=${dockerContainerName} -q | xargs --no-run-if-empty docker container stop"
-                bat "docker container ls -a -f name=${dockerContainerName} -q | xargs -r docker container rm"
-                bat "docker images -q --filter=reference=${dockerImageName} | xargs --no-run-if-empty docker rmi -f"
+                bat "docker ps -f name=pet -q | xargs --no-run-if-empty docker container stop"
+                bat "docker container ls -a -f name=pet -q | xargs -r docker container rm"
+                bat "docker images -q --filter=reference=pet-api | xargs --no-run-if-empty docker rmi -f"
             }
         }
         stage('Docker-compose start') {
