@@ -3,7 +3,7 @@ services:
     build: .
     ports:
       - '8082:8082'
-      - '5433:5433'
+      - '5432:5432'
     container_name: pet-api
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://192.168.31.146:5432/pet
