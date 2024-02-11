@@ -20,6 +20,10 @@ pipeline {
         stage('container remove') {
             steps {
                 bat "docker-compose -p pet rm -f"
+                script {
+                    echo "Waiting"
+                    bat 'timeout /t 10 > nul'
+                }
             }
         }
         stage('image remove') {
@@ -31,6 +35,10 @@ pipeline {
                    } else {
                        echo "Image pet-api:latest does not exist. Skipping clean-up."
                    }
+               }
+               script {
+                   echo "Waiting"
+                   bat 'timeout /t 10 > nul'
                }
             }
         }
