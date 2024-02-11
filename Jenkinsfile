@@ -16,6 +16,7 @@ pipeline {
             steps {
                 bat "docker-compose -p pet stop"
                 bat "docker-compose -p pet rm -f"
+                bat "docker rmi pet-docker-api:latest"
             }
         }
         stage('Docker-compose start') {
