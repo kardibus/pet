@@ -38,13 +38,22 @@ pipeline {
             steps {
                 bat 'docker-compose up --build'
                 script {
+                    echo "Waiting for the container to start..."
+                    bat 'timeout /t 60 > nul' // Подождать 60 секунд для запуска контейнера
+
                     def containerStatus = bat(script: 'docker inspect -f {{.State.Status}} pet-api', returnStdout: true).trim()
-                    while (containerStatus != 'running') {
-                        echo "Waiting for the container to start..."
+                    def attempts = 0
+                    while (containerStatus != 'running' && attempts < 6) { // Попробуем 6 раз в течение 60 секунд
+                        attempts++
+                        echo "Container is not yet running. Attempt ${attempts}..."
                         bat 'timeout /t 10 > nul' // Подождать 10 секунд перед следующей попыткой
                         containerStatus = bat(script: 'docker inspect -f {{.State.Status}} pet-api', returnStdout: true).trim()
                     }
-                    echo "Container is running."
+                    if (containerStatus == 'running') {
+                        echo "Container is running."
+                    } else {
+                        echo "Container did not start within the expected time."
+                    }
                 }
             }
         }
