@@ -14,8 +14,8 @@ pipeline {
         }
         stage('Clean container') {
             steps {
-                bat "docker-compose -p pet stop"
-                bat "docker-compose -p pet rm -f"
+                bat "docker-compose -p pet-docker stop"
+                bat "docker-compose -p pet-docker rm -f"
                 bat "docker rmi pet-docker-api:latest"
             }
         }
