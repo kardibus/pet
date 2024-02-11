@@ -2,12 +2,9 @@ package com.kardibus.pet
 
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
-import com.elbekd.bot.types.UpdateMessage
-import com.github.demidko.aot.MorphologyTag
-import com.github.demidko.aot.PartOfSpeech.partOfSpeech
-import com.github.demidko.aot.WordformMeaning.lookupForMeanings
 import com.kardibus.pet.model.Words
-import com.kardibus.pet.util.Message
+//import com.kardibus.pet.util.SenderMessage
+//import com.kardibus.pet.util.SenderMessageImpl
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -19,7 +16,7 @@ val Log = LoggerFactory.getLogger(WordsService::class.java)
 class WordsService(
     private var wordsRepository: WordsRepository,
     private val bot: Bot,
-    private var messages: Message
+  //  private var senderMessage: SenderMessageImpl
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -54,14 +51,14 @@ class WordsService(
 //                }
 
                 for (w in words) {
-                    val lookupForMeanings = lookupForMeanings(w.lowercase());
+                    //    val lookupForMeanings = lookupForMeanings(w.lowercase());
 
-                    logger.info("размер массива ${lookupForMeanings.size}")
-                    if (lookupForMeanings.size >0) {
-                        logger.info("лемма ${lookupForMeanings[0].lemma}")
-                        logger.info("морфалогия ${lookupForMeanings[0].morphology} ${partOfSpeech(lookupForMeanings[0].morphology[0])}")
-                        logger.info("трансформация ${lookupForMeanings[0].transformations}")
-                    }
+                    //        logger.info("размер массива ${lookupForMeanings.size}")
+                    //         if (lookupForMeanings.size > 0) {
+                    //        logger.info("лемма ${lookupForMeanings[0].lemma}")
+                    //            logger.info("морфалогия ${lookupForMeanings[0].morphology} ${partOfSpeech(lookupForMeanings[0].morphology[0])}")
+                    //            logger.info("трансформация ${lookupForMeanings[0].transformations}")
+                    //     }
                     //     if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord && word.isNotEmpty()) {
                     if (wordsRepository.findByWordSimilarity(w.lowercase()).stream().count() > 0) {
                         logger.info("$msg")
@@ -73,15 +70,15 @@ class WordsService(
                             text = "у нас нельзя матерится в чате ${map[random]}  \uD83D\uDE19"
                         )
                         if (wordsRepository.findByWordOutInt(w.lowercase()) < 1) {
-                          wordsRepository.save(Words().apply { word = w.lowercase() })
+                            wordsRepository.save(Words().apply { word = w.lowercase() })
                         }
                         isWord = false
                     }
                 }
             }
 
-            messages.addMessage(msg.text.toString())
-            messages.startSendingMessages()
+      //      senderMessage.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
+      //      senderMessage.sendMessage()
 
             if (!msg.newChatMembers.isNullOrEmpty()) {
                 bot.sendMessage(
@@ -98,7 +95,7 @@ class WordsService(
             }
 
             if (!msg.forwardFromChat?.title.isNullOrBlank()) {
-                if (msg.forwardFromChat!!.title == "Двач" || msg.forwardFromChat!!.title == "Ньюсач/Двач" ) {
+                if (msg.forwardFromChat!!.title == "Двач" || msg.forwardFromChat!!.title == "Ньюсач/Двач") {
                     bot.deleteMessage(msg.chat.id.toChatId(), msg.messageId)
                 }
             }

@@ -14,5 +14,5 @@ data class CompletionOptions(
 
 data class Message(
     val role: String,
-    val text: String
+    val text: String?
 )
