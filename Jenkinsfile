@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        MAVEN_ARGS = "-e clean install"
+        MAVEN_ARGS = "clean install"
         dockerContainerName = 'pet'
         dockerImageName = 'pet-api'
     }
