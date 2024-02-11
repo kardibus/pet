@@ -6,6 +6,6 @@ services:
       - '5432:5432'
     container_name: pet-api
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pet
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://192.168.31.146:5432/pet
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=12345678
