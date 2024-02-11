@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        dockerContainerName = 'pet'
-        dockerImageName = 'pet-api'
+        dockerContainerName = 'pet-api'
+        dockerImageName = 'pet-image'
     }
     stages {
         stage('Build') {

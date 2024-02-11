@@ -2,10 +2,9 @@ FROM openjdk:17
 
 WORKDIR /app
 
-ARG JAR_FILE=target\pet-*.jar
+# Копирование JAR-файла в контейнер
+COPY . .
 
-COPY ${JAR_FILE} pet.jar
-
-CMD ["java", "-jar", "-Xmx1024m", "/app/pet.jar"]
+ENTRYPOINT ["java", "-jar", "target//pet-0.0.1-SNAPSHOT.jar"]
 
 EXPOSE 8082
