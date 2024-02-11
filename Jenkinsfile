@@ -12,10 +12,18 @@ pipeline {
                 }
             }
         }
-        stage('Clean container') {
+        stage('Clean container stop') {
             steps {
                 bat "docker-compose -p pet-docker stop"
+            }
+        }
+        stage('Clean container remove') {
+            steps {
                 bat "docker-compose -p pet-docker rm -f"
+            }
+        }
+        stage('Clean image remove') {
+            steps {
                 bat "docker rmi pet-docker-api:latest"
             }
         }
