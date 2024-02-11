@@ -12,17 +12,17 @@ pipeline {
                 }
             }
         }
-        stage('Clean container stop') {
+        stage('container stop') {
             steps {
                 bat "docker-compose -p pet stop"
             }
         }
-        stage('Clean container remove') {
+        stage('container remove') {
             steps {
                 bat "docker-compose -p pet rm -f"
             }
         }
-        stage('Clean image remove') {
+        stage('image remove') {
             steps {
                script {
                    def imageExists = bat(script: 'docker image inspect pet-api:latest > nul 2>&1', returnStatus: true) == 0
@@ -36,7 +36,7 @@ pipeline {
         }
         stage('Docker-compose start') {
             steps {
-                bat 'docker-compose up --build'
+                bat 'docker-compose up --build -d'
                 script {
                     echo "Waiting for the container to start..."
                     bat 'timeout /t 60 > nul' // Подождать 60 секунд для запуска контейнера
