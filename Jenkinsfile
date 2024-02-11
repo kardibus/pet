@@ -25,7 +25,7 @@ pipeline {
         stage('Clean image remove') {
             steps {
                script {
-                   def imageExists = sh(script: 'docker image inspect pet-api:latest > /dev/null 2>&1', returnStatus: true) == 0
+                   def imageExists = bat(script: 'docker image inspect pet-api:latest > nul 2>&1', returnStatus: true) == 0
                    if (imageExists) {
                        bat "docker rmi pet-api:latest"
                    } else {
@@ -38,11 +38,11 @@ pipeline {
             steps {
                 bat 'docker-compose up --build'
                 script {
-                    def containerStatus = sh(script: 'docker inspect -f {{.State.Status}} pet-api', returnStdout: true).trim()
+                    def containerStatus = bat(script: 'docker inspect -f {{.State.Status}} pet-api', returnStdout: true).trim()
                     while (containerStatus != 'running') {
                         echo "Waiting for the container to start..."
-                        sleep 10 // Подождать 10 секунд перед следующей попыткой
-                        containerStatus = sh(script: 'docker inspect -f {{.State.Status}} pet-api', returnStdout: true).trim()
+                        bat 'timeout /t 10 > nul' // Подождать 10 секунд перед следующей попыткой
+                        containerStatus = bat(script: 'docker inspect -f {{.State.Status}} pet-api', returnStdout: true).trim()
                     }
                     echo "Container is running."
                 }
