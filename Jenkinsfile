@@ -8,13 +8,13 @@ pipeline {
                 }
             }
         }
-        stage('Clean container') {
-            steps {
-                bat "docker ps -f name=pet -q | xargs --no-run-if-empty docker container stop"
-                bat "docker container ls -a -f name=pet -q | xargs -r docker container rm"
-                bat "docker images -q --filter=reference=pet-api | xargs --no-run-if-empty docker rmi -f"
-            }
-        }
+stage('Clean container') {
+    steps {
+        bat "docker ps -a --format {{.Names}} | Select-String 'pet' | ForEach-Object { docker stop $_.ToString().Trim() }"
+        bat "docker ps -a --format {{.Names}} | Select-String 'pet' | ForEach-Object { docker rm $_.ToString().Trim() }"
+        bat "docker images --format {{.Repository}}:{{.Tag}} | Select-String 'pet-api' | ForEach-Object { docker rmi $_.ToString().Trim() }"
+    }
+}
         stage('Docker-compose start') {
             steps {
                 bat 'docker compose up -d'
