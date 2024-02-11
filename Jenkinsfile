@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    environment {
+        dockerContainerName = 'pet'
+        dockerImageName = 'pet-api'
+    }
     stages {
         stage('Build') {
             steps {
@@ -10,11 +14,9 @@ pipeline {
         }
         stage('Clean container') {
             steps {
-                script {
-                    powershell 'docker ps -a --format {{.Names}} | Select-String "pet" | ForEach-Object { docker stop $_.ToString().Trim() }'
-                    powershell 'docker ps -a --format {{.Names}} | Select-String "pet" | ForEach-Object { docker rm $_.ToString().Trim() }'
-                    powershell 'docker images --format {{.Repository}}:{{.Tag}} | Select-String "pet-api" | ForEach-Object { docker rmi $_.ToString().Trim() }'
-                }
+                bat "docker ps -a -f name=${dockerContainerName} -q | ForEach-Object { docker stop $_ }"
+                bat "docker ps -a -f name=${dockerContainerName} -q | ForEach-Object { docker rm $_ }"
+                bat "docker images -q --filter=reference=${dockerImageName} | ForEach-Object { docker rmi -f $_ }"
             }
         }
         stage('Docker-compose start') {
