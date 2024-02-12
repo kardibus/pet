@@ -42,6 +42,11 @@ pipeline {
                 }
             }
         }
+        stage('Docker set restart always') {
+            steps {
+                bat 'docker update --restart=always pet-api'
+            }
+        }
     }
 }
 
