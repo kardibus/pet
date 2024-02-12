@@ -4,6 +4,7 @@ import com.elbekd.bot.Bot
 import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
@@ -15,9 +16,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Configuration
-class Config {
-
-    private val token = "5903504093:AAGEWOrT2M-E6KLkjKAIchwMu8hwNx9s-Yk"
+class Config(@Value("\${telegram.token}") var token:String) {
 
     @Bean
     fun bot(): Bot {
