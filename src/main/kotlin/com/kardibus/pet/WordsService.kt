@@ -92,7 +92,7 @@ class WordsService(
                             bot.sendMessage(
                                 chatId.toLong().toChatId(),
                                 replyToMessageId = messageId,
-                                text = "у нас нельзя матерится в чате ${map[random]}  \uD83D\uDE19"
+                                text = "у нас нельзя оскорблять или матерится в чате ${map[random]}  \uD83D\uDE19"
                             )
                         } catch (e: Exception) {
                             logger.error(e.message)
