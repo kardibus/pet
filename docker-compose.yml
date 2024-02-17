@@ -9,3 +9,5 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=12345678
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - YA_KEY=${YA_KEY}
+      - YA_ID=${YA_ID}
