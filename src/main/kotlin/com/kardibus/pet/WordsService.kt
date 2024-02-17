@@ -6,6 +6,7 @@ import com.kardibus.pet.model.Words
 import com.kardibus.pet.util.SenderMessageYandexImpl
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -17,11 +18,9 @@ class WordsService(
     private val bot: Bot,
     private val senderMessageYandexImpl: SenderMessageYandexImpl
 ) {
-
     private val logger = LoggerFactory.getLogger(javaClass)
-
     private var isWord: Boolean = true
-
+    private var isMadWord: Boolean = false
     private var map = mapOf(0 to "мразь", 1 to "хуесос", 2 to "уебок", 3 to "пидор")
 
     init {
@@ -31,34 +30,38 @@ class WordsService(
     fun start() {
         bot.onMessage { msg ->
             isWord = true
-            if (msg.text != null) {
+
+            runBlocking {
+                senderMessageYandexImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
+                val result = senderMessageYandexImpl.sendMessage()
+                logger.info(result.toString())
+                result.forEach { (chatId, messagesMap) ->
+                    messagesMap.forEach { (messageId, responseMessage) ->
+                        var random = (0..3).random()
+                        if (responseMessage == "true") {
+                            try {
+                                isMadWord = responseMessage.toBoolean()
+                                bot.sendMessage(
+                                    chatId.toLong().toChatId(),
+                                    replyToMessageId = messageId,
+                                    text = "у нас нельзя оскорблять или матерится в чате ${map[random]}  \uD83D\uDE19"
+                                )
+                            } catch (e: Exception) {
+                                logger.error(e.message)
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            if (msg.text != null && !isMadWord) {
                 val words: List<String> = msg.text?.split(" ", ".", ",", "?", "!")!!.toList()
 
                 Log.info(msg.toString())
 
-                //     var message = messages.sendMessage(msg.text!!)
-
-//                Log.info(message.toString())
-//
-//                if (message!!.result.alternatives.first().message.text.lowercase() == "true") {
-//                    var random = (0..3).random()
-//                    bot.sendMessage(
-//                        msg.chat.id.toChatId(),
-//                        replyToMessageId = msg.messageId,
-//                        text = "у нас нельзя оскорблять или матерится в чате ${map.get(random)}  \uD83D\uDE19"
-//                    )
-//                }
-
                 for (w in words) {
-                    //    val lookupForMeanings = lookupForMeanings(w.lowercase());
 
-                    //        logger.info("размер массива ${lookupForMeanings.size}")
-                    //         if (lookupForMeanings.size > 0) {
-                    //        logger.info("лемма ${lookupForMeanings[0].lemma}")
-                    //            logger.info("морфалогия ${lookupForMeanings[0].morphology} ${partOfSpeech(lookupForMeanings[0].morphology[0])}")
-                    //            logger.info("трансформация ${lookupForMeanings[0].transformations}")
-                    //     }
-                    //     if (wordsRepository.findByWordOutInt(word.lowercase()) > 0 && isWord && word.isNotEmpty()) {
                     if (wordsRepository.findByWordSimilarity(w.lowercase()).stream().count() > 0) {
                         logger.info("$msg")
                         logger.info("${msg.from!!.first_name} ${msg.from!!.lastName}")
@@ -78,27 +81,7 @@ class WordsService(
                         isWord = false
                     }
                 }
-            }
-
-
-            senderMessageYandexImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
-            val result = senderMessageYandexImpl.sendMessage()
-            logger.info(result.toString())
-            result.forEach { (chatId, messagesMap) ->
-                messagesMap.forEach { (messageId, responseMessage) ->
-                    var random = (0..3).random()
-                    if (responseMessage == "true") {
-                        try {
-                            bot.sendMessage(
-                                chatId.toLong().toChatId(),
-                                replyToMessageId = messageId,
-                                text = "у нас нельзя оскорблять или матерится в чате ${map[random]}  \uD83D\uDE19"
-                            )
-                        } catch (e: Exception) {
-                            logger.error(e.message)
-                        }
-                    }
-                }
+                isMadWord = false
             }
 
             if (!msg.newChatMembers.isNullOrEmpty()) {
