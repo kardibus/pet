@@ -3,8 +3,7 @@ package com.kardibus.pet
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
 import com.kardibus.pet.model.Words
-//import com.kardibus.pet.util.SenderMessage
-//import com.kardibus.pet.util.SenderMessageImpl
+import com.kardibus.pet.util.SenderMessageYandexImpl
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -16,7 +15,7 @@ val Log = LoggerFactory.getLogger(WordsService::class.java)
 class WordsService(
     private var wordsRepository: WordsRepository,
     private val bot: Bot,
-  //  private var senderMessage: SenderMessageImpl
+    private val senderMessageYandexImpl: SenderMessageYandexImpl
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -64,11 +63,15 @@ class WordsService(
                         logger.info("$msg")
                         logger.info("${msg.from!!.first_name} ${msg.from!!.lastName}")
                         var random = (0..3).random()
-                        bot.sendMessage(
-                            msg.chat.id.toChatId(),
-                            replyToMessageId = msg.messageId,
-                            text = "у нас нельзя матерится в чате ${map[random]}  \uD83D\uDE19"
-                        )
+                        try {
+                            bot.sendMessage(
+                                msg.chat.id.toChatId(),
+                                replyToMessageId = msg.messageId,
+                                text = "у нас нельзя матерится в чате ${map[random]}  \uD83D\uDE19"
+                            )
+                        } catch (e: Exception) {
+                            logger.error(e.message)
+                        }
                         if (wordsRepository.findByWordOutInt(w.lowercase()) < 1) {
                             wordsRepository.save(Words().apply { word = w.lowercase() })
                         }
@@ -77,8 +80,26 @@ class WordsService(
                 }
             }
 
-      //      senderMessage.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
-      //      senderMessage.sendMessage()
+
+            senderMessageYandexImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
+            val result = senderMessageYandexImpl.sendMessage()
+            logger.info(result.toString())
+            result.forEach { (chatId, messagesMap) ->
+                messagesMap.forEach { (messageId, responseMessage) ->
+                    var random = (0..3).random()
+                    if (responseMessage == "true") {
+                        try {
+                            bot.sendMessage(
+                                chatId.toLong().toChatId(),
+                                replyToMessageId = messageId,
+                                text = "у нас нельзя матерится в чате ${map[random]}  \uD83D\uDE19"
+                            )
+                        } catch (e: Exception) {
+                            logger.error(e.message)
+                        }
+                    }
+                }
+            }
 
             if (!msg.newChatMembers.isNullOrEmpty()) {
                 bot.sendMessage(

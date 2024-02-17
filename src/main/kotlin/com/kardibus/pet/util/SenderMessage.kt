@@ -1,5 +1,5 @@
 package com.kardibus.pet.util
 
-interface SenderMessage {
-    fun sendMessage(): MutableMap<Long, MutableMap<Long, String>>
+interface SenderMessage<T,H> {
+    fun sendMessage(): MutableMap<T, MutableMap<T, H>>
 }
