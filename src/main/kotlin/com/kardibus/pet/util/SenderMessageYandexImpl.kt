@@ -32,71 +32,62 @@ class SenderMessageYandexImpl(
             return result
         }
 
-        val chat = cache.entries.first()
-        val keyMessage = chat.value.keys
+        for ((chatId, messages) in cache) {
+            val messagesMap = mutableMapOf<Long, String>()
 
-//        if (keyMessage.size <= 1) {
-//            return result
-//        }
+            messages.keys.forEach { messageId ->
+                val completionOptions = CompletionOptions(stream = false, temperature = 0.0, maxTokens = "2000")
+                val systemMessage = Message(
+                    role = "system",
+                    text = "верни true если в тексте есть матершинные слова или текст оскорбляет, иначе верни false"
+                )
+                val userMessage = Message(role = "user", text = messages[messageId])
 
-        keyMessage.toList().forEach { messageId ->
-            val completionOptions = CompletionOptions(stream = false, temperature = 0.0, maxTokens = "2000")
-            val systemMessage = Message(
-                role = "system",
-                text = "верни true если в тексте есть матершинные слова или текст оскорбляет, иначе верни false"
-            )
-            val userMessage = Message(role = "user", text = chat.value[messageId])
+                // Create model request
+                val modelRequest = ModelRequest(
+                    modelUri = "gpt://${folderId}/yandexgpt/latest",
+                    completionOptions = completionOptions,
+                    messages = listOf(systemMessage, userMessage)
+                )
 
-            // Create model request
-            val modelRequest = ModelRequest(
-                modelUri = "gpt://${folderId}/yandexgpt/latest",
-                completionOptions = completionOptions,
-                messages = listOf(systemMessage, userMessage)
-            )
+                val objectMapper = ObjectMapper()
+                val json = objectMapper.writeValueAsString(modelRequest)
 
-            val objectMapper = ObjectMapper()
-            val json = objectMapper.writeValueAsString(modelRequest)
+                Log.info(json)
 
-            Log.info(json)
+                runBlocking { delay(delayGlobal.toLong()) }
 
-            runBlocking { delay(delayGlobal.toLong()) }
+                val response = try {
+                    webClient.post().uri("https://llm.api.cloud.yandex.net/foundationModels/v1/completion")
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Api-Key ${yandexApiKey}")
+                        .body(BodyInserters.fromValue(json))
+                        .retrieve()
+                        .bodyToMono(String::class.java)
+                        .block()
 
-            val response = try {
-                webClient.post().uri("https://llm.api.cloud.yandex.net/foundationModels/v1/completion")
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Api-Key ${yandexApiKey}")
-                    //   .header("x-folder-id", "b1gh1vnfkg7ti0vn41di")
-                    .body(BodyInserters.fromValue(json))
-                    .retrieve()
-                    .bodyToMono(String::class.java)
-                    .block()
+                } catch (e: WebClientResponseException.Unauthorized) {
+                    logger.error("Unauthorized error: {}", e.message)
+                    null
+                } catch (e: WebClientResponseException) {
+                    logger.error("WebClient error: {}", e.message)
+                    delayGlobal.plus(10000)
+                    null
+                } catch (e: Exception) {
+                    logger.error("Unexpected error: {}", e.message)
+                    null
+                }
 
-            } catch (e: WebClientResponseException.Unauthorized) {
-                logger.error("Unauthorized error: {}", e.message)
-                null
-            } catch (e: WebClientResponseException) {
-                logger.error("WebClient error: {}", e.message)
-                delayGlobal.plus(10000)
-                null
-            } catch (e: Exception) {
-                logger.error("Unexpected error: {}", e.message)
-                null
-            }
-            logger.info(response)
-            response?.let {
-                val modelResponse = Gson().fromJson(it, ModelResponse::class.java)
-                if (!modelResponse.result.alternatives.isNullOrEmpty()) {
-                    val messagesMap = mutableMapOf<Long, String>()
-                    messagesMap[messageId] = modelResponse.result.alternatives[0].message.text.toString()
-                    result[chat.key] = messagesMap
+                response?.let {
+                    val modelResponse = Gson().fromJson(it, ModelResponse::class.java)
+                    if (!modelResponse.result.alternatives.isNullOrEmpty()) {
+                        messagesMap[messageId] = modelResponse.result.alternatives[0].message.text.toString()
+                        cache[chatId]?.remove(messageId)
+                    }
                 }
             }
 
-            // Удаляем сообщение из кэша только после успешной отправки
-            response?.let {
-                cache[chat.key]?.remove(messageId)
-                delayGlobal.minus(10000)
-            }
+            result[chatId] = messagesMap
         }
 
         return result
