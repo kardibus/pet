@@ -24,7 +24,7 @@ class SenderMessageYandexImpl(
     private @Value("\${yandex.folder.id}") var folderId: String
 ) : Cache<Long, String>() {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private var delayGlobal = 0
+    private var delayGlobal = 1000
 
     override fun sendMessage(): MutableMap<Long, MutableMap<Long, String>> {
         val result: MutableMap<Long, MutableMap<Long, String>> = HashMap()
