@@ -41,7 +41,7 @@ class SenderMessageYandexImpl(
                 val completionOptions = CompletionOptions(stream = false, temperature = 0.0, maxTokens = "2000")
                 val systemMessage = Message(
                     role = "system",
-                    text = "верни true если в тексте есть матершинные слова или текст имеет оскорбления, иначе верни false"
+                    text = "верни true если в тексте есть матершинные слова или в тексте есть оскорбления, иначе верни false и возвращай false если в тексте хвалят или текст имеет положительный или нейтральный характер"
                 )
                 val userMessage = Message(role = "user", text = messages[messageId])
 
