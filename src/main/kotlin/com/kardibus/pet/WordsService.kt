@@ -3,9 +3,8 @@ package com.kardibus.pet
 import com.elbekd.bot.Bot
 import com.elbekd.bot.model.toChatId
 import com.kardibus.pet.model.Words
+import com.kardibus.pet.util.SenderMessageSberImpl
 import com.kardibus.pet.util.SenderMessageYandexImpl
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -16,7 +15,8 @@ val Log = LoggerFactory.getLogger(WordsService::class.java)
 class WordsService(
     private var wordsRepository: WordsRepository,
     private val bot: Bot,
-    private val senderMessageYandexImpl: SenderMessageYandexImpl
+    private val senderMessageYandexImpl: SenderMessageYandexImpl,
+    private val senderMessageSberImpl: SenderMessageSberImpl
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var isWord: Boolean = true
@@ -24,36 +24,63 @@ class WordsService(
     private var map = mapOf(0 to "мразь", 1 to "хуесос", 2 to "уебок", 3 to "пидор")
 
     init {
-        GlobalScope.launch { start() }
+        start()
     }
 
     fun start() {
         bot.onMessage { msg ->
             isWord = true
+            isMadWord=false
 
-            runBlocking {
-                senderMessageYandexImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
-                val result = senderMessageYandexImpl.sendMessage()
-                logger.info(result.toString())
-                result.forEach { (chatId, messagesMap) ->
-                    messagesMap.forEach { (messageId, responseMessage) ->
-                        var random = (0..3).random()
-                        if (responseMessage == "true") {
-                            try {
-                                isMadWord = responseMessage.toBoolean()
-                                bot.sendMessage(
-                                    chatId.toLong().toChatId(),
-                                    replyToMessageId = messageId,
-                                    text = "у нас нельзя оскорблять или матерится в чате ${map[random]}  \uD83D\uDE19"
-                                )
-                            } catch (e: Exception) {
-                                logger.error(e.message)
+            if (!isMadWord) {
+                runBlocking {
+                    senderMessageYandexImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
+                    val result = senderMessageYandexImpl.sendMessage()
+                    logger.info(result.toString())
+                    result.forEach { (chatId, messagesMap) ->
+                        messagesMap.forEach { (messageId, responseMessage) ->
+                            var random = (0..3).random()
+                            if (responseMessage == "true") {
+                                try {
+                                    isMadWord = responseMessage.toBoolean()
+                                    bot.sendMessage(
+                                        chatId.toLong().toChatId(),
+                                        replyToMessageId = messageId,
+                                        text = "у нас нельзя оскорблять или матерится в чате ${map[random]}  \uD83D\uDE19"
+                                    )
+                                } catch (e: Exception) {
+                                    logger.error(e.message)
+                                }
                             }
                         }
                     }
                 }
             }
 
+                  if (!isMadWord) {
+                      runBlocking {
+                          senderMessageSberImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
+                          val result = senderMessageSberImpl.sendMessage()
+                          logger.info(result.toString())
+                          result.forEach { (chatId, messagesMap) ->
+                              messagesMap.forEach { (messageId, responseMessage) ->
+                                  var random = (0..3).random()
+                                  if (responseMessage == "true") {
+                                      try {
+                                          isMadWord = responseMessage.toBoolean()
+                                          bot.sendMessage(
+                                              chatId.toChatId(),
+                                              replyToMessageId = messageId,
+                                              text = "у нас нельзя оскорблять или матерится в чате ${map[random]}  \uD83D\uDE19"
+                                          )
+                                      } catch (e: Exception) {
+                                          logger.error(e.message)
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  }
 
             if (msg.text != null && !isMadWord) {
                 val words: List<String> = msg.text?.split(" ", ".", ",", "?", "!")!!.toList()

@@ -9,6 +9,7 @@ import com.kardibus.pet.model.ModelResponse
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.BodyInserters
@@ -18,6 +19,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 val Log = LoggerFactory.getLogger(SenderMessage::class.java)
 
 @Service
+@Qualifier("ya")
 class SenderMessageYandexImpl(
     private val webClient: WebClient,
     private @Value("\${yandex.api.key}") var yandexApiKey: String,
@@ -83,6 +85,9 @@ class SenderMessageYandexImpl(
                     if (!modelResponse.result.alternatives.isNullOrEmpty()) {
                         messagesMap[messageId] = modelResponse.result.alternatives[0].message.text.toString()
                         cache[chatId]?.remove(messageId)
+                        if (delayGlobal >= 11000) {
+                            delayGlobal.minus(10000)
+                        }
                     }
                 }
             }

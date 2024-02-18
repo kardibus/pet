@@ -1,27 +1,32 @@
 package com.kardibus.pet.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.kardibus.pet.model.CompletionOptions
-import com.kardibus.pet.model.Message
+import com.google.gson.Gson
 import com.kardibus.pet.model.MessageDTO
 import com.kardibus.pet.model.ModelRequestSber
-import com.kardibus.pet.model.ModelResponse
 import com.kardibus.pet.model.ModelResponseSber
+import com.kardibus.pet.model.ModelResponseTokenSber
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 
+private val logger = LoggerFactory.getLogger(SenderMessageSberImpl::class.java)
+
 @Service
+@Qualifier("sber")
 class SenderMessageSberImpl(
     private val webClient: WebClient,
-    @Value("\${sber.key}") private val sberKey: String,
-    @Value("\${sber.secret}") private val sberSecret: String
+    private @Value("\${sber.secret}") val sberSecret: String
 ) : Cache<Long, String>() {
-
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private var token: String = ""
 
     override fun sendMessage(): MutableMap<Long, MutableMap<Long, String>> {
         val result: MutableMap<Long, MutableMap<Long, String>> = HashMap()
@@ -30,11 +35,14 @@ class SenderMessageSberImpl(
             return result
         }
 
+        if (token.isNullOrEmpty()) {
+            updateToken()
+        }
+
         for ((chatId, messages) in cache) {
             val messagesMap = mutableMapOf<Long, String>()
 
             messages.keys.forEach { messageId ->
-                val completionOptions = CompletionOptions(stream = false, temperature = 0.0, maxTokens = "2000")
                 val systemMessage = MessageDTO(
                     role = "system",
                     content = "верни true если в тексте есть матершинные слова или текст оскорбляет, иначе верни false"
@@ -59,11 +67,13 @@ class SenderMessageSberImpl(
                 val objectMapper = ObjectMapper()
                 val json = objectMapper.writeValueAsString(modelRequest)
 
+                runBlocking { delay(delayGlobal.toLong()) }
+
                 val response = try {
                     webClient.post()
                         .uri("https://gigachat.devices.sberbank.ru/api/v1/chat/completions")
                         .header("Content-Type", "application/json")
-                        .header("Authorization", "Bearer $sberKey")
+                        .header("Authorization", "Bearer $token")
                         .body(BodyInserters.fromValue(json))
                         .retrieve()
                         .bodyToMono(String::class.java)
@@ -74,6 +84,7 @@ class SenderMessageSberImpl(
                     null
                 } catch (e: WebClientResponseException) {
                     logger.error("WebClient error: {}", e.message)
+                    delayGlobal.plus(10000)
                     null
                 } catch (e: Exception) {
                     logger.error("Unexpected error: {}", e.message)
@@ -81,17 +92,56 @@ class SenderMessageSberImpl(
                 }
 
                 response?.let {
-                    val modelResponse = objectMapper.readValue(it, ModelResponseSber::class.java)
+                    val modelResponse = Gson().fromJson(it, ModelResponseSber::class.java)
                     if (!modelResponse.choices.isNullOrEmpty()) {
                         val choice = modelResponse.choices[0]
                         messagesMap[messageId] = choice.message.content
                         cache[chatId]?.remove(messageId)
+                        if (delayGlobal >= 11000) {
+                            delayGlobal.minus(10000)
+                        }
                     }
                 }
             }
             result[chatId] = messagesMap
         }
-
         return result
+    }
+
+    fun updateToken() {
+        token = requestToken()
+    }
+
+    private fun requestToken(): String {
+        val scope = "GIGACHAT_API_PERS"
+        var token = ""
+
+        val response = try {
+            webClient.post()
+                .uri("https://ngw.devices.sberbank.ru:9443/api/v2/oauth")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .header("RqUID", "eff806e2-f981-4c8c-86ec-79991490c66e")
+                .header(HttpHeaders.AUTHORIZATION, "Basic $sberSecret")
+                .body(BodyInserters.fromFormData("scope", scope))
+                .retrieve()
+                .bodyToMono(String::class.java)
+                .block()
+        } catch (e: WebClientResponseException.Unauthorized) {
+            logger.error("Unauthorized error: {}", e.message)
+            null
+        } catch (e: WebClientResponseException) {
+            logger.error("WebClient error: {}", e.message)
+            null
+        } catch (e: Exception) {
+            logger.error("Unexpected error: {}", e.message)
+            null
+        }
+
+        response?.let {
+            val modelResponse = Gson().fromJson(it, ModelResponseTokenSber::class.java)
+            token = modelResponse.access_token
+        }
+        return token
     }
 }
