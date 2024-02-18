@@ -45,7 +45,7 @@ class SenderMessageSberImpl(
             messages.keys.forEach { messageId ->
                 val systemMessage = MessageDTO(
                     role = "system",
-                    content = "верни true если в тексте есть матершинные слова или текст оскорбляет, иначе верни false"
+                    content = "верни true если в тексте есть матершинные слова или в тексте есть оскорбления, иначе верни false"
                 )
                 val userMessage = MessageDTO(
                     role = "user",
