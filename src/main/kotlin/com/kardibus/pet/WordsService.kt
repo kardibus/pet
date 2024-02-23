@@ -7,6 +7,7 @@ import com.kardibus.pet.util.SenderMessageSberImpl
 import com.kardibus.pet.util.SenderMessageYandexImpl
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 val Log = LoggerFactory.getLogger(WordsService::class.java)
@@ -16,7 +17,9 @@ class WordsService(
     private var wordsRepository: WordsRepository,
     private val bot: Bot,
     private val senderMessageYandexImpl: SenderMessageYandexImpl,
-    private val senderMessageSberImpl: SenderMessageSberImpl
+    private val senderMessageSberImpl: SenderMessageSberImpl,
+    private @Value("\${ya.enable}") var yaEnable: Boolean,
+    private @Value("\${sber.enable}") var sberEnable: Boolean,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var isWord: Boolean = true
@@ -32,7 +35,7 @@ class WordsService(
             isWord = true
             isMadWord=false
 
-            if (!isMadWord) {
+            if (!isMadWord && yaEnable) {
                 runBlocking {
                     senderMessageYandexImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
                     val result = senderMessageYandexImpl.sendMessage()
@@ -57,7 +60,7 @@ class WordsService(
                 }
             }
 
-                  if (!isMadWord) {
+                  if (!isMadWord && sberEnable) {
                       runBlocking {
                           senderMessageSberImpl.addMessage(msg.chat.id, msg.messageId, msg.text.toString())
                           val result = senderMessageSberImpl.sendMessage()
